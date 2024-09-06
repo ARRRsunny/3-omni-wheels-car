@@ -12,15 +12,12 @@ int YValue = 0;
 #define MOTOR1_IN2_PIN 7
 
 #define MOTOR2_EN_PIN 3
-#define MOTOR2_IN1_PIN 4
-#define MOTOR2_IN2_PIN 2
+#define MOTOR2_IN1_PIN 2
+#define MOTOR2_IN2_PIN 4
 
 #define MOTOR3_EN_PIN 11                    
 #define MOTOR3_IN2_PIN 12
 #define MOTOR3_IN1_PIN 10
-
-
-
 
 #define Trigger_PIN 13
 
