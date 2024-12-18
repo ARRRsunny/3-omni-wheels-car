@@ -34,6 +34,7 @@ This Arduino project controls a 3-wheeled robot capable of omni-directional move
 | Motor 1 | Pin 5   | Pin 6 | Pin 7 |
 | Motor 2 | Pin 3   | Pin 2 | Pin 4 |
 | Motor 3 | Pin 11  | Pin 10 | Pin 12 |
+
 ![image](https://github.com/ARRRsunny/3-omni-wheels-car/blob/main/motordriver.jpg)
 ![image](https://github.com/ARRRsunny/3-omni-wheels-car/blob/main/pin.png)
 ### Trigger Pin
