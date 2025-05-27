@@ -1,13 +1,21 @@
-#include <MPU6050_tockn.h>
 #include <SoftwareSerial.h>
+#include <Servo.h>
+#include <MPU6050_tockn.h>
 #include <Wire.h>
 
-MPU6050 mpu6050(Wire);
+char movement = '0';
+int XValue = 0;
+int YValue = 0;
+int setang = 0;
+int angle_bias = 0;
+int speed_offset = 0;
+bool Butstate = false;
 
-// Bluetooth Setup
-SoftwareSerial Serial_receive(9, 8);  // RX, TX
+const int max_angle_bias = 50;
+const int base_speed = 225;
+const int rotate_speed = 180;
+const int adjustable_range = 255 - base_speed; 
 
-// Motor Pins (L298N)
 #define MOTOR1_EN_PIN 5
 #define MOTOR1_IN1_PIN 6
 #define MOTOR1_IN2_PIN 7
@@ -16,33 +24,115 @@ SoftwareSerial Serial_receive(9, 8);  // RX, TX
 #define MOTOR2_IN1_PIN 2
 #define MOTOR2_IN2_PIN 4
 
-#define MOTOR3_EN_PIN 11
+#define MOTOR3_EN_PIN 11                    
 #define MOTOR3_IN2_PIN 12
 #define MOTOR3_IN1_PIN 10
 
 #define Trigger_PIN 13
 
-// PID Parameters
-double Kp = 1.5, Ki = 0.3, Kd = 0.2;
-double pidError, lastError, integral;
-double targetAngle = 0;  // Target heading angle
+MPU6050 mpu6050(Wire);
+SoftwareSerial Serial_receive(9,8);  //RX,TX
 
-// Motor Control
-int baseSpeed = 0;
-int v1, v2, v3;
-char movement = '0';
-unsigned long lastUpdate = 0;
+
+
+unsigned long previousMillis = 0;
+const long interval = 20; // 20ms interval
+
+void drive_motor(int v_1, int v_2, int v_3) {
+  int V_1 = v_1-speed_offset;
+  int V_2 = v_2-speed_offset;
+  int V_3 = v_3-speed_offset;
+  setMotorPinState(V_1, MOTOR1_IN1_PIN, MOTOR1_IN2_PIN);       //setting of the orientation 
+  setMotorPinState(V_2, MOTOR2_IN1_PIN, MOTOR2_IN2_PIN);
+  setMotorPinState(V_3, MOTOR3_IN1_PIN, MOTOR3_IN2_PIN);
+  /*
+  Serial.print(V_1);
+  Serial.print(' ');
+  Serial.print(V_2);
+  Serial.print(' ');
+  Serial.print(V_3);
+  */
+  analogWrite(MOTOR1_EN_PIN, abs(V_1));             //setting speed
+  analogWrite(MOTOR2_EN_PIN, abs(V_2));
+  analogWrite(MOTOR3_EN_PIN, abs(V_3));
+}
+
+void case_sw(char M) {                    
+  switch (M) {
+    case '0':
+      drive_motor(0, 0, 0);
+      break;
+
+    case '1':
+      drive_motor(0, -base_speed, base_speed);
+      break;
+
+    case '2':
+      drive_motor(-base_speed, 0, base_speed);
+      break;
+
+    case '3':
+      drive_motor(-base_speed, 0, base_speed);
+      delay(15);
+      drive_motor(-base_speed, base_speed, 0);
+      delay(15);
+      break;
+
+    case '4':
+      drive_motor(-base_speed, base_speed, 0);
+      break;
+
+    case '5':
+      drive_motor(0, base_speed, -base_speed);
+      break;
+
+    case '6':
+      drive_motor(base_speed, 0, -base_speed);
+      break;
+
+    case '7':
+      drive_motor(base_speed, -base_speed, 0);
+      delay(15);
+      drive_motor(base_speed, 0, -base_speed);
+      delay(15);
+      break;
+
+    case '8':
+      drive_motor(base_speed, -base_speed, 0);
+      break;
+    case 'R':
+      drive_motor(rotate_speed, rotate_speed, rotate_speed);
+      break;
+
+    case 'L':
+      drive_motor(-rotate_speed, -rotate_speed, -rotate_speed);
+      break;
+    case 'K':
+      digitalWrite(Trigger_PIN, HIGH);
+      Butstate = true;
+      break;
+    case 'B':
+      digitalWrite(Trigger_PIN, LOW);
+      Butstate = false;
+      break;
+    default:
+      drive_motor(0, 0, 0);
+  }
+}
+
+
+
+void setMotorPinState(int value, int in1Pin, int in2Pin) {            //function of setting the orientation
+  digitalWrite(in1Pin, value >= 0 ? 0 : value < 0 ? 1:0);
+  digitalWrite(in2Pin, value > 0 ? 1 : value <= 0 ? 0:0);
+}
 
 void setup() {
-  Serial.begin(9600);
-  Serial_receive.begin(9600);
-  Wire.begin();
-  
-  // Initialize MPU6050
-  mpu6050.begin();
-  mpu6050.calcGyroOffsets(true);  // Calibrate gyro (keep robot still during startup)
+  Serial.begin(9600);  // Serial monitor
 
-  // Motor Control Pins
+  Serial_receive.begin(9600);  // UART2, baud rate: 115200,BT
+
+
   pinMode(MOTOR1_IN1_PIN, OUTPUT);
   pinMode(MOTOR1_IN2_PIN, OUTPUT);
   pinMode(MOTOR1_EN_PIN, OUTPUT);
@@ -50,121 +140,74 @@ void setup() {
   pinMode(MOTOR2_IN1_PIN, OUTPUT);
   pinMode(MOTOR2_IN2_PIN, OUTPUT);
   pinMode(MOTOR2_EN_PIN, OUTPUT);
-
+  
   pinMode(MOTOR3_IN1_PIN, OUTPUT);
   pinMode(MOTOR3_IN2_PIN, OUTPUT);
   pinMode(MOTOR3_EN_PIN, OUTPUT);
 
   pinMode(Trigger_PIN, OUTPUT);
+
+  analogWrite(MOTOR1_EN_PIN, 0);
+  digitalWrite(MOTOR1_IN1_PIN, 0);  
+  digitalWrite(MOTOR1_IN2_PIN, 0);
   
-  stopMotors();
+  analogWrite(MOTOR2_EN_PIN, 0);
+  digitalWrite(MOTOR2_IN1_PIN, 0); 
+  digitalWrite(MOTOR2_IN2_PIN, 0);
+
+  analogWrite(MOTOR3_EN_PIN, 0);
+  digitalWrite(MOTOR3_IN1_PIN, 0);  
+  digitalWrite(MOTOR3_IN2_PIN, 0);
+
+  Wire.begin();
+  mpu6050.begin();
+  mpu6050.calcGyroOffsets(true);
+
   Serial.println("READY");
 }
 
-void loop() {
-  // Bluetooth handling
-  if (Serial_receive.available()) {
-    handleBluetooth();
-  }
+void cal_bias_offset(){
+  speed_offset = map(constrain(angle_bias,-max_angle_bias,max_angle_bias),-max_angle_bias,max_angle_bias,-adjustable_range,adjustable_range);
+}
 
-  // Gyro update and PID calculation
+void checkangle(){
   mpu6050.update();
-  if(millis() - lastUpdate > 20) {  // Update at ~50Hz
-    double currentAngle = mpu6050.getAngleZ();
-    calculatePID(currentAngle);
-    lastUpdate = millis();
-  }
-
-  // Execute movement with PID correction
-  executeMovement();
-  
-  delay(10);
-}
-
-void handleBluetooth() {
-  int inByte = Serial_receive.read();
-  if (strchr("012345678RLKB", inByte)) {
-    movement = inByte;
-    baseSpeed = (movement == 'R' || movement == 'L') ? 190 : 255;
-    // Reset PID when new command arrives
-    pidError = 0;
-    integral = 0;
-    lastError = 0;
-  } else {
-    movement = '0';
-    baseSpeed = 0;
-  }
-  Serial.println(movement);
-}
-
-void calculatePID(double currentAngle) {
-  double error = currentAngle - targetAngle;
-  integral += error;
-  double derivative = error - lastError;
-  double pidOutput = Kp * error + Ki * integral + Kd * derivative;
-  lastError = error;
-
-  // Apply correction to motors
-  v1 += pidOutput;
-  v2 += pidOutput;
-  v3 += pidOutput;
-
-  // Constrain speeds
-  v1 = constrain(v1, -255, 255);
-  v2 = constrain(v2, -255, 255);
-  v3 = constrain(v3, -255, 255);
-}
-
-void executeMovement() {
-  switch(movement) {
-    case '0': stopMotors(); break;
-    case '1': drive_motor(0,        -baseSpeed, baseSpeed); break;  // Forward-right
-    case '2': drive_motor(-baseSpeed, 0,       baseSpeed); break;  // Backward-right
-    case '3': hori_move(3); break;                                // Special movement 1
-    case '4': drive_motor(-baseSpeed, baseSpeed, 0); break;       // Backward-left
-    case '5': drive_motor(0,         baseSpeed, -baseSpeed); break; // Forward-left
-    case '6': drive_motor(baseSpeed, 0,        -baseSpeed); break;  // Forward
-    case '7': hori_move(7); break;                                // Special movement 2
-    case '8': drive_motor(baseSpeed, -baseSpeed, 0); break;       // Backward
-    case 'R': drive_motor(baseSpeed, baseSpeed, baseSpeed); break;  // Rotate right
-    case 'L': drive_motor(-baseSpeed, -baseSpeed, -baseSpeed); break; // Rotate left
-    case 'K': digitalWrite(Trigger_PIN, HIGH); break;
-    case 'B': digitalWrite(Trigger_PIN, LOW); break;
-    default: stopMotors();
+  int angle = mpu6050.getAngleZ();
+  if(Butstate==true){
+    angle_bias = setang - angle;
+  } else if(Butstate==false){
+    angle_bias = 0;
+    setang = angle;
   }
 }
 
-void hori_move(int d_movement) {
-  switch(d_movement) {
-    case 3:  // Diagonal correction
-      drive_motor(-250 + v1, 0 + v2, 250 + v3);
-      delay(15);
-      drive_motor(-250 + v1, 250 + v2, 0 + v3);
-      delay(15);
-      break;
-    case 7:
-      drive_motor(250 + v1, -250 + v2, 0 + v3);
-      delay(15);
-      drive_motor(250 + v1, 0 + v2, -250 + v3);
-      delay(15);
-      break;
+void loop() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+
+    if (Serial_receive.available()) {
+      int inByte = Serial_receive.read();
+      if (strchr("012345678RLKB", inByte)) {
+        movement = inByte;
+        checkangle();
+        cal_bias_offset();
+      } else {
+        movement = '0';
+      }
+    }
+
+    /*
+    Serial.println(' ');
+    Serial.print(movement);
+    Serial.print(' ');
+    Serial.print(Butstate);
+    Serial.print(' ');
+    Serial.print(angle_bias);
+    Serial.print(' ');
+    Serial.print(speed_offset);
+    Serial.print(' ');
+    */
+    case_sw(movement);
   }
-}
-
-void drive_motor(int speed1, int speed2, int speed3) {
-  setMotor(speed1, MOTOR1_IN1_PIN, MOTOR1_IN2_PIN, MOTOR1_EN_PIN);
-  setMotor(speed2, MOTOR2_IN1_PIN, MOTOR2_IN2_PIN, MOTOR2_EN_PIN);
-  setMotor(speed3, MOTOR3_IN1_PIN, MOTOR3_IN2_PIN, MOTOR3_EN_PIN);
-}
-
-void setMotor(int speed, int in1, int in2, int en) {
-  speed = constrain(speed, -255, 255);
-  digitalWrite(in1, speed > 0 ? HIGH : LOW);
-  digitalWrite(in2, speed > 0 ? LOW : HIGH);
-  analogWrite(en, abs(speed));
-}
-
-void stopMotors() {
-  drive_motor(0, 0, 0);
-  v1 = v2 = v3 = 0;
 }
