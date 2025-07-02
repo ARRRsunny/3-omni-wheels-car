@@ -16,6 +16,8 @@ char movement = '0';
 #define MOTOR3_IN2_PIN 12
 
 
+int PWM;
+
 #define Trigger_PIN 13
 
 SoftwareSerial Serial_receive(9, 8);  // RX, TX
@@ -140,14 +142,18 @@ void loop() {
     previousMillis = currentMillis;
 
     if (Serial_receive.available()) {
-      int inByte = Serial_receive.read();
-      if (strchr("012345678RLKB", inByte)) {
-        movement = inByte;
-      } else {
-        movement = '0';
+      String data = Serial_receive.readStringUntil('\n');
+      data.trim();
+      int commaIndex = data.indexOf(',');
+      if (commaIndex != -1) {
+        movement = data.charAt(2);
+        String intStr = data.substring(commaIndex + 1);
+        PWM = intStr.toInt();
       }
     }
-    Serial.println(movement);
+    //Serial.print(movement);
+    //Serial.print(" ");
+    //Serial.println(PWM);
     case_sw(movement);
   }
 }
