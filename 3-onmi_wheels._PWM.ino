@@ -15,11 +15,11 @@ char movement = '0';
 #define MOTOR3_IN1_PIN 13                    
 #define MOTOR3_IN2_PIN 12
 
-#define Analog_PIN 10
+#define PWM_PIN 10
 
 int PWM = 0;
 
-
+Servo myservo;
 
 SoftwareSerial Serial_receive(9, 8);  // RX, TX
 
@@ -114,7 +114,6 @@ void setup() {
   pinMode(MOTOR3_IN2_PIN, OUTPUT);
   pinMode(MOTOR3_EN_PIN, OUTPUT);
 
-  pinMode(Analog_PIN, OUTPUT);
 
   analogWrite(MOTOR1_EN_PIN, 0);
   digitalWrite(MOTOR1_IN1_PIN, LOW);  
@@ -128,7 +127,7 @@ void setup() {
   digitalWrite(MOTOR3_IN1_PIN, LOW);  
   digitalWrite(MOTOR3_IN2_PIN, LOW);
 
-  analogWrite(Analog_PIN,0);
+  myservo.attach(PWM_PIN);
 
   Serial.println("READY");
 }
@@ -151,7 +150,7 @@ void loop() {
     //Serial.print(movement);
     //Serial.print(" ");
     //Serial.println(PWM);
-    analogWrite(Analog_PIN,PWM);
+    myservo.write(PWM);
     case_sw(movement);
   }
 }
