@@ -1,92 +1,92 @@
-
 # 3-Wheeled Omni Robot Control System
 
-![image](https://github.com/ARRRsunny/3-omni-wheels-car/blob/main/3_wheel_robot.jpg)
+![image](https://github.com/ARRRsunny/3-omni-wheels-car/blob/main/asset/3_wheel_robot.jpg)
 
-This repository contains Arduino sketches for controlling a 3-wheeled omni-directional robot. The latest sketch is `new_pcb/PWM_brench_ble.ino`, which uses PWM motor control and Bluetooth/serial command input to drive the robot and activate an optional trigger output.
+This repository contains Arduino sketches for controlling a 3-wheeled omni-directional robot. The system utilizes PWM motor control, Bluetooth/serial command input, and PID control for precise movement. It supports forward, backward, diagonal, rotational, and special horizontal movements, along with an optional trigger output.
 
-## Latest Sketch
+## Project Sketches
 
-- `new_pcb/MPU6050_brench_ble.ino` – for Arduino nano-ble, PID control.
-- `new_pcb/PWM_brench_ble.ino` – for Arduino nano-ble, PWM motor outputs.
-- `new_pcb/brench_ble.ino` – for Arduino nano-ble, alternate sketch using the Arduino hardware serial port at 115200 baud.
-- `new_pcb/brench.ino` – for Arduino nano Bluetooth sketch using `SoftwareSerial`.
+* `new_pcb/PWM_brench_ble.ino`: For Arduino Nano BLE, focuses on PWM motor outputs (Latest).
+* `new_pcb/MPU6050_brench_ble.ino`: For Arduino Nano BLE, utilizes PID control.
+* `new_pcb/brench_ble.ino`: For Arduino Nano BLE, an alternate sketch using the hardware serial port at 115200 baud.
+* `new_pcb/brench.ino`: Standard Arduino Nano Bluetooth sketch using `SoftwareSerial`.
 
 ## Features
 
-- Omni-directional movement: forward, backward, diagonal, and rotation.
-- Bluetooth/serial command control.
-- Independent PWM control for 3 motors.
-- Trigger output(digital) on pin 13.
-- Special horizontal motion routines for commands `3` and `7`.
-- Built-in debug output over serial.
-- PID control
-  
+* Omni-directional movement: forward, backward, diagonal, and rotation.
+* Wireless control via Bluetooth or serial command.
+* Independent PWM control for 3 motors.
+* PID control for stabilized movement.
+* Special horizontal motion routines (commands `3` and `7`).
+* Digital trigger output on pin 13.
+* Built-in debug output over serial.
+
 ## Hardware Requirements
 
-- Arduino Uno / Nano or compatible board.
-- 3 DC motors with a compatible motor driver (e.g. L298N or similar).
-- Bluetooth module such as HC-05 / HC-06 for wireless control.
-- Motor power supply and Arduino power source.
-- Wires, connectors, and optional trigger mechanism.
-- PCB(new/old).
-- gyroscope (e.g. MPU6050/MPU9250)
-  
-## Pin Configuration
+* Arduino Uno / Nano or compatible board.
+* Custom PCB (new or old version).
+* 3 DC motors with a compatible motor driver (e.g., L298N).
+* Gyroscope module (e.g., MPU6050 or MPU9250).
+* Bluetooth module(e.g., HC-05 / HC-06) / BLE (Bluetooth Low Energy) for wireless control. Or, 
+* Dedicated motor power supply and Arduino power source.
+* Wires, connectors, and an optional trigger mechanism.
 
-### Motor Pins
-
-| Motor   | EN (PWM) | IN1 | IN2 |
-|--------|----------|-----|-----|
-| Motor 1 | 11       | 12  | 10  |
-| Motor 2 | 5        | 7   | 6   |
-| Motor 3 | 3        | 4   | 2   |
-
-![image](https://github.com/ARRRsunny/3-omni-wheels-car/blob/main/motordriver.jpg)
-![image](https://github.com/ARRRsunny/3-omni-wheels-car/blob/main/pin.png)
-
-### Trigger Pin
-
-- `Trigger_PIN`: 13
-
-### Bluetooth / Serial
-
-- `RX`: 9
-- `TX`: 8
-
-> For new_pcb/brench.ino`, Bluetooth uses `SoftwareSerial` on pins 9/8. For `new_pcb/brench_ble.ino`, commands are read from the hardware `Serial` port at `115200`.
-### I2C
-
-- `SDA`: A4
-- `SCL`: A5
-
-> For gyroscope (MPU6050), pls maintain stable for few second after turn on the robot for calibration 
 ## Software Requirements
 
-- Arduino IDE 1.8.0 or higher.
-- Built-in libraries:
-  - `Servo.h` For PWM output
-  - `SoftwareSerial.h` For UART communication
-  - `Wire.h` For I2C communication
-  - `MPU6050_light.h` For gyroscope (MPU6050)
-## Upload Instructions
+* Arduino IDE 1.8.0 or higher.
+* `Servo.h` (Built-in, for PWM output).
+* `SoftwareSerial.h` (Built-in, for UART communication).
+* `Wire.h` (Built-in, for I2C communication).
+* `MPU6050_light.h` (Third-party, for MPU6050 gyroscope).
+
+---
+
+## Pin Configuration
+
+### Motor Driver Pins
+
+| Motor | EN (PWM) | IN1 | IN2 |
+| --- | --- | --- | --- |
+| Motor 1 | 11 | 12 | 10 |
+| Motor 2 | 5 | 7 | 6 |
+| Motor 3 | 3 | 4 | 2 |
+
+### Sensors & Communication Pins
+
+| Component | Pin | Notes |
+| --- | --- | --- |
+| Trigger Output | 13 | Digital HIGH/LOW |
+| Bluetooth RX | 9 | `SoftwareSerial` only (`new_pcb/brench.ino`) |
+| Bluetooth TX | 8 | `SoftwareSerial` only (`new_pcb/brench.ino`) |
+| I2C SDA | A4 | For MPU6050 Gyroscope |
+| I2C SCL | A5 | For MPU6050 Gyroscope |
+
+> **Note:** For `new_pcb/brench_ble.ino`, commands are read from the hardware `Serial` port at `115200` baud. For the gyroscope, please keep the robot perfectly still for a few seconds after powering on to allow for calibration. 
+
+---
+
+## Setup & Operation
+
+### Upload Instructions
 
 1. Open the Arduino IDE.
-2. Load `new_pcb/brench_ble.ino` for the latest Bluetooth sketch.
+2. Load your desired sketch (e.g., `new_pcb/brench_ble.ino`).
 3. Select the correct board and USB port.
 4. Upload the sketch.
 
-## Operation
+### Operating the Robot
 
-1. Power the Arduino and the motor driver.
-2. Pair the Bluetooth module with your phone or computer (if using Bluetooth).
+1. Power the Arduino and the motor driver (ensure battery packs are switched on).
+2. Pair the Bluetooth module with your phone or computer (if using wireless).
 3. Send command characters from a Bluetooth terminal app or serial monitor.
-4. The sketch prints the current command to serial for debugging.
+4. Observe the serial monitor; the sketch prints the current command for debugging.
+
+---
 
 ## Command List
 
 | Command | Action |
-|---------|--------|
+| --- | --- |
 | `0` | Stop all motors |
 | `1` | Move forward |
 | `2` | Move backward |
@@ -98,59 +98,50 @@ This repository contains Arduino sketches for controlling a 3-wheeled omni-direc
 | `8` | Move diagonally left / rotate motion |
 | `R` | Rotate clockwise at fixed speed |
 | `L` | Rotate counterclockwise at fixed speed |
-| `K` | Activate trigger output |
-| `B` | Deactivate trigger output |
+| `K` | Activate trigger output (Pin 13 HIGH) |
+| `B` | Deactivate trigger output (Pin 13 LOW) |
+
+### Example Commands
+
+* **`1`**: Forward motion (Motor 1 stopped, Motor 2 reversed, Motor 3 forward).
+* **`R`**: Clockwise rotation at a fixed speed value of `150` for all motors.
+* **`K`**: Sets trigger pin 13 HIGH.
+
+---
 
 ## Code Behavior
 
-- `drive_motor(v1, v2, v3)` sets motor directions and PWM values.
-- `case_sw(movement)` selects movement based on received command.
-- `hori_move(3)` and `hori_move(7)` execute two-step horizontal motion sequences.
-- `setMotorPinState()` controls motor driver direction pins from the sign of each speed value.
-- `loop()` polls serial input every 20 ms and applies the current movement command.
-- Invalid input defaults to `0` (stop).
+* `drive_motor(v1, v2, v3)`: Sets motor directions and PWM values.
+* `case_sw(movement)`: Selects movement behavior based on the received command.
+* `hori_move(3)` / `hori_move(7)`: Executes two-step horizontal motion sequences using short `delay(15)` intervals to alternate motor outputs.
+* `setMotorPinState()`: Controls motor driver direction pins based on the sign (+/-) of each speed value.
+* `loop()`: Polls serial input every 20 ms and applies the current movement command. Invalid inputs default to `0` (stop).
+* **Speed Constraints:** The sketch uses absolute PWM values up to `255` for full speed, and a reduced constant of `150` for rotation commands.
 
-## Example Commands
-
-- `1`: forward motion with motor 1 stopped, motor 2 reversed, motor 3 forward.
-- `R`: clockwise rotation at a fixed speed value of `150` for all motors.
-- `K`: set trigger pin 13 HIGH.
+---
 
 ## Troubleshooting
-- Robot does not move at all,
-  - Check Bluetooth pairing or serial(ble) connection. (HC-05 slowly blinking means connected, Nano-ble keep flashing means connected)
-- Robot does not move at all, but Arduino is on and bluetooth is connected:
-  - You forget to turn on the battery pack.
-  - Upload Arduino programme again. 
-  - Check/Replace PCB/Arduino/Bluetooth module.
-- One of the motors does not move:
-  - Check wire.
-  - Check/Replace PCB.    
-  - Confirm power to the motor driver and motors.
-- Unexpected motion:
-  - Check the motor driver direction wiring.
-  - Ensure `SoftwareSerial` pins 9/8 are not conflicting with other hardware.
-  - Verify wiring matches the pin table.
-- Cannot upload programme:  
-  - Try to select Arduino UNO in the Arduino IDE even you are using Arduino Nano
-  - Use another USB Port.
-  - Use another USB wire.
-  - Upload an empty programme, e.g.
-    `void setup() {
-  // put your setup code here, to run once:
 
-}
+| Issue | Possible Solutions |
+| --- | --- |
+| **No movement at all** | Check the Bluetooth or Serial connection. The HC-05 slowly blinking means it is connected; Nano-BLE keeping flashing means connected. |
+| **No movement, but powered and connected** | Ensure the battery pack is turned on. Re-upload the Arduino program. Check or replace the PCB, Arduino, or Bluetooth module. |
+| **One motor does not move** | Check the wiring to that motor. Inspect or replace the PCB. Confirm power is reaching the motor driver and motors. |
+| **Unexpected motion** | Check the motor driver direction wiring. Ensure `SoftwareSerial` pins 9/8 are not conflicting with other hardware. Verify your wiring matches the pin table. |
+| **Cannot upload program** | Try selecting "Arduino UNO" in the IDE even if using a Nano. Try another USB port or cable. Upload a blank program to reset the board (see below). |
 
-void loop() {
-  // put your main code here, to run repeatedly:
-
-}` 
-
-## Notes
-
-- The code prints the active movement character on every loop for debugging.
-- Special movement commands `3` and `7` use short `delay(15)` steps to alternate motor outputs.
-- The sketch uses absolute PWM values up to `255` for full speed and a reduced constant `150` for rotation commands.
+> **Blank Program for Resetting:**
+> ```cpp
+> void setup() {
+>   // run once:
+> }
+> void loop() {
+>   // run repeatedly:
+> }
+> 
+> ```
+> 
+> 
 
 ## License
 
