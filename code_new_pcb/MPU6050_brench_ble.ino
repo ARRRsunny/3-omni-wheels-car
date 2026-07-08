@@ -141,8 +141,7 @@ void apply_corrected_movement(char cmd) {
 
 
 void setup() {
-  Serial.begin(9600);
-  Serial_receive.begin(9600);
+  Serial.begin(115200);
 
   const Motor motors[] = {M1, M2, M3};
   for (int i = 0; i < 3; i++) {
@@ -172,12 +171,12 @@ void loop() {
   if (currentMillis - previousMillis >= INTERVAL) {
     previousMillis = currentMillis;
 
-    if (Serial_receive.available()) {
-      int inByte = Serial_receive.read();
-      if (strchr("01234567837RLKB", inByte)) {
+    if (Serial.available()) {
+      int inByte = Serial.read();
+      if (strchr("012345678RLKB", inByte)) {
         movement = inByte;
 
-        if (strchr("01234567837RL", movement)) {
+        if (strchr("012345678RL", movement)) {
           if (pre_movement != movement) {
             pre_movement = movement;
             targetAngle = mpu.getAngleZ();
@@ -187,7 +186,6 @@ void loop() {
         }
       }
     }
-
     apply_corrected_movement(movement);
   }
 }
